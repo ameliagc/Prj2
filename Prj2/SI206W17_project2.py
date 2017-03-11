@@ -76,40 +76,57 @@ def find_urls(s):
 def get_umsi_data():
 	page_list = []
 
+	unique_identifier = 'umsi_directory_data'
+	
+	
 	if unique_identifier in CACHE_DICTION:
 		page_list = CACHE_DICTION[unique_identifier]
+
 	else:
+	
 		i = 0
 		for i in range(13):
 			if i == 0:
 				base_url = "https://www.si.umich.edu/directory?field_person_firstname_value=&field_person_lastname_value=&rid=All"
-				unique_identifier = requests.get(base_url, headers={'User-Agent': 'SI_CLASS'})
-				url_response = unique_identifier.text
-				CACHE_DICTION['umsi_directory_data'] = url_response
+				response = requests.get(base_url, headers={'User-Agent': 'SI_CLASS'})
+				text_response = response.text
+				#CACHE_DICTION[unique_identifier] = text_response
 				f = open(CACHE_FNAME, "w")
 				f.write(json.dumps(CACHE_DICTION))
 				f.close()
-				pagelist.append(f)
+				page_list.append(text_response)
 
 			else:
-				base_url = "https://www.si.umich.edu/directory?field_person_firstname_value=&field_person_lastname_value=&rid=All&page="+i
-				unique_identifier = requests.get(base_url, headers={'User-Agent': 'SI_CLASS'})
-				url_response = unique_identifier.text
-				CACHE_DICTION['umsi_directory_data'] = url_response
+				base_url = "https://www.si.umich.edu/directory?field_person_firstname_value=&field_person_lastname_value=&rid=All&page="+str(i)
+				response = requests.get(base_url, headers={'User-Agent': 'SI_CLASS'})
+				text_response = response.text
+				#CACHE_DICTION[unique_identifier] = text_response
 				f = open(CACHE_FNAME, "w")
 				f.write(json.dumps(CACHE_DICTION))
 				f.close()
-				pagelist.append(f)
-		return pagelist
+				page_list.append(text_response)
+
+		return page_list
 
 
 ## PART 2 (b) - Create a dictionary saved in a variable umsi_titles 
 ## whose keys are UMSI people's names, and whose associated values are those people's titles, e.g. "PhD student" or "Associate Professor of Information"...
-page_list = get_umsi_data()
+pages = get_umsi_data()
 
+new_page_list = ''.join(map(str,pages))
 
 umsi_titles = {}
-for title in soup.find_all(class_=)
+
+soup = BeautifulSoup(new_page_list, "html.parser")
+
+titles = []
+descriptions = []
+
+for title in soup.find_all(class_="field-items"):
+		if title.a:
+			titles.append(title.a.text.replace("\n", " ").strip())
+		else:
+			title.contents[0].strip()
 
 
 '''
