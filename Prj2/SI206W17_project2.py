@@ -48,19 +48,15 @@ except:
 ## INPUT: any string
 ## RETURN VALUE: a list of strings that represents all of the URLs in the input string
 def find_urls(s):
-	regex = r"http://[a-z]+\.[a-z]+"
+	regex = r"https?:\/\/[A-Za-z0-9]{2,}(?:\.+[A-Za-z0-9]{2,})+"
 	answer = re.findall(regex, s)
 	return answer
+
 
 ## For example: 
 ## find_urls("http://www.google.com is a great site") should return ["http://www.google.com"]
 ## find_urls("I love looking at websites like http://etsy.com and http://instagram.com and stuff") should return ["http://etsy.com","http://instagram.com"]
 ## find_urls("the internet is awesome #worldwideweb") should return [], empty list
-
-
-
-
-
 
 
 ## PART 2 (a) - Define a function called get_umsi_data.
@@ -78,39 +74,36 @@ def get_umsi_data():
 
 	unique_identifier = 'umsi_directory_data'
 	
-	
 	if unique_identifier in CACHE_DICTION:
 		page_list = CACHE_DICTION[unique_identifier]
-
+		return page_list
 	else:
-	
 		i = 0
-		for i in range(13):
+		for i in range(12):
 			if i == 0:
 				base_url = "https://www.si.umich.edu/directory?field_person_firstname_value=&field_person_lastname_value=&rid=All"
 				response = requests.get(base_url, headers={'User-Agent': 'SI_CLASS'})
 				text_response = response.text
-				#CACHE_DICTION[unique_identifier] = text_response
+				page_list.append(text_response)
+				CACHE_DICTION[unique_identifier] = page_list
 				f = open(CACHE_FNAME, "w")
 				f.write(json.dumps(CACHE_DICTION))
 				f.close()
-				page_list.append(text_response)
-
 			else:
 				base_url = "https://www.si.umich.edu/directory?field_person_firstname_value=&field_person_lastname_value=&rid=All&page="+str(i)
 				response = requests.get(base_url, headers={'User-Agent': 'SI_CLASS'})
 				text_response = response.text
-				#CACHE_DICTION[unique_identifier] = text_response
+				page_list.append(text_response)
+				CACHE_DICTION[unique_identifier] = page_list
 				f = open(CACHE_FNAME, "w")
 				f.write(json.dumps(CACHE_DICTION))
 				f.close()
-				page_list.append(text_response)
 
 		return page_list
 
-
 ## PART 2 (b) - Create a dictionary saved in a variable umsi_titles 
 ## whose keys are UMSI people's names, and whose associated values are those people's titles, e.g. "PhD student" or "Associate Professor of Information"...
+
 pages = get_umsi_data()
 
 new_page_list = ''.join(map(str,pages))
@@ -119,35 +112,12 @@ umsi_titles = {}
 
 soup = BeautifulSoup(new_page_list, "html.parser")
 
-titles = []
-descriptions = []
+people = soup.find_all("div",{"class":"views-row"})
 
-for title in soup.find_all(class_="field-items"):
-		if title.a:
-			titles.append(title.a.text.replace("\n", " ").strip())
-		else:
-			title.contents[0].strip()
-
-
-'''
-nytimes_headlines = []
-
-fileref = open("nytimes_data.html","r")
-text_file = fileref.read()
-soup = BeautifulSoup(text_file, "html.parser")
- 
-
-for story_heading in soup.find_all(class_="story-heading"): 
-    if story_heading.a: 
-        nytimes_headlines.append(story_heading.a.text.replace("\n", " ").strip())
-    else: 
-        story_heading.contents[0].strip()
-
-print(nytimes_headlines[:10])
-'''	
-
-
-
+for person in people:
+	name = person.find(property="dc:title").text
+	description = person.find(class_="field field-name-field-person-titles field-type-text field-label-hidden").text
+	umsi_titles.update({name:description})
 
 
 ## PART 3 (a) - Define a function get_five_tweets
@@ -178,13 +148,19 @@ def get_five_tweets(s):
 
 ## PART 3 (b) - Write one line of code to invoke the get_five_tweets function with the phrase "University of Michigan" and save the result in a variable five_tweets.
 five_tweets = get_five_tweets("University of Michigan")
-
+#print(five_tweets)
 
 
 ## PART 3 (c) - Iterate over the five_tweets list, invoke the find_urls function that you defined in Part 1 on each element of the list, and accumulate a new list of each of the total URLs in all five of those tweets in a variable called tweet_urls_found. 
+tweet_urls_found = []
+
+#print(tweet_urls_found)
+
 for tweet in five_tweets:
 	if find_urls(tweet):
 		tweet_urls_found.append(tweet)
+
+#print(tweet_urls_found)
 
 
 
